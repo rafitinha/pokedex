@@ -38,7 +38,6 @@ h1 {
   width: 50%;
   height: 45%;
   border-radius: 100%;
-  background-color: #fff;
   opacity: .7;
   position: absolute;
   top: 15%;
@@ -130,6 +129,7 @@ h1 {
 	height: 180px;
 	position: relative;
 	z-index: 2;
+	width: 100%;
 }
 
 @keyframes bounce {
