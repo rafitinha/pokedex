@@ -5,14 +5,20 @@ String.prototype.lpad = function (padString, length) {
     return str;
 }
 
-//String(n).padStart(4, '0'); --> ES2017 Update
-
 //const getImagePokemon = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.id}.png`
+//const getImagePokemon = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemon.id}.svg`
 
+const getImagePokemon = id => `https://assets.pokemon.com/assets/cms2/img/pokedex/full/${String(id).padStart(3, '0')}.png`
 
 const getPokemonUrl = id => `https://pokeapi.co/api/v2/pokemon/${id}`
 
 const getPokemonSpeciesUrl = id => `https://pokeapi.co/api/v2/pokemon-species/${id}`
+
+const getIsLegendary = id => {
+    return fetch(getPokemonSpeciesUrl(id))
+        .then(response => response.json())
+        .then(pokemonSpecies => pokemonSpecies.is_legendary)
+}
 
 
 const generatePokemonPromises = () => Array(126).fill().map((_, index) =>
@@ -33,10 +39,17 @@ const generatePokemonPromisesList = () => {
                     if (response.ok) {
                         return response.json();
                     } else {
-                        return response.text();
+                        return { error: response.text() };
                         // throw new Error('Something went wrong');
                     }
-                }).catch(error => {
+                }).then(data => {
+                    return getIsLegendary(data.id).then(dataIsLegendary => {
+                        return { ...data, isLegendary: dataIsLegendary }
+                    }).catch(error => {
+                        return "Not Found";
+                    })
+                })
+                .catch(error => {
                     console.error(error)
                 })
         );
@@ -48,10 +61,11 @@ const generateHTML = pokemons => pokemons.reduce((accumulator, pokemon) => {
 
     if (pokemon instanceof Object) {
         const types = pokemon.types.map(typeInfo => typeInfo.type.name)
+        const isLegendary = pokemon.isLegendary ? "isLegendary" : "notLegendary"
 
         accumulator += `
-          <li class="card ${types[0]}">
-           <img class="card-image" alt="${pokemon.name}" src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/dream-world/${pokemon.id}.svg"/>
+          <li class="card ${types[0]} ${isLegendary}">
+           <img class="card-image" alt="${pokemon.name}" src="${getImagePokemon(pokemon.id)}"/>
            <h2 class="card-title">${pokemon.id}. ${pokemon.name}</h2>
            <p class="card-subtitle">${types.join(' | ')}</p>
           </li >
